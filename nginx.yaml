@@ -1,0 +1,39 @@
+- hosts: web
+  tasks:
+   - name: Add Nginx repositiory
+     apt_repository: repo='ppa:nginx/stable' state=present
+     register: ppastable
+
+   - name: Install nginx
+     apt: pkg=nginx state=installed update_cache=true
+     when: ppastable|success
+     register: nginxinstalled
+     notify: 
+       - start nginx
+
+   - name: Disable default Conf
+     when: nginxinstalled|success 
+     file: dest=/etc/nginx/sites-enabled/default state=absent
+
+   - name: Add nginx configurations
+     when: nginxinstalled|success 
+     template: src=playansible.com.conf dest=/etc/nginx/sites-enabled/playansible.com.conf owner=root group=root
+     register: nginxconf
+
+   - name: Create link
+     when: nginxconf|success
+     file: src=/etc/nginx/sites-enabled/playansible.com.conf dest=/etc/nginx/sites-available/playansible.com.conf state=link
+
+   - name: Document root
+     when: nginxinstalled|success
+     file: dest=/var/www/playansible.com/public state=directory owner=www-data group=www-data
+     notify:
+       - reload nginx
+
+  handlers:
+   - name: start nginx
+     service: name=nginx state=started
+
+   - name: reload nginx
+     service: name=nginx state=reloaded
+ 
