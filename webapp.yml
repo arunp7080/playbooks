@@ -15,8 +15,21 @@
       - php
       - php-mysql
 
-  - name: Installing and configuring Mysql server..
+  - name: Installing Mysql server..
     action: yum pkg={{ item }} state=installed
     with_items:
       - mysql-server
       - mysql
+
+  - name: Starting database service..
+    action: service name=mysqld state=started
+
+  - name: Setup Root credentials on Mysql
+    mysql_user: 
+      - name: root
+      - host: {{ item }}
+      - password: avengers
+    with_items:
+      - "{{ ansible_hostname }}"
+      - 127.0.0.1
+      - ::1
