@@ -1,0 +1,22 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+ 
+  tasks:
+
+  - name: install latest version of Apache 
+    yum:
+      name: httpd
+      state: present
+
+  - name: install php dependencies
+    action: yum pkg={{ item }} state=installed
+    with_items:
+      - php
+      - php-mysql
+
+  - name: Installing and configuring Mysql server..
+    action: yum pkg={{ item }} state=installed
+    with_items:
+      - mysql-server
+      - mysql
