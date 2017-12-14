@@ -1,6 +1,10 @@
 ---
 - hosts: 127.0.0.1
   connection: local
+  vars:
+     database: avengers
+     dbuser: avengers
+     dbpass: avengers
  
   tasks:
 
@@ -20,16 +24,37 @@
     with_items:
       - mysql-server
       - mysql
+      - MySQL-python
 
   - name: Starting database service..
-    action: service name=mysqld state=started
+    action: service name=mysqld state=started enabled=yes
 
-  - name: Setup Root credentials on Mysql
-    mysql_user: 
-      - name: root
-      - host: {{ item }}
-      - password: avengers
+  - name: Create mysql user..
+    mysql_user: name={{ dbuser }} password={{ dbpass }} priv='*.*:ALL' state=present
+
+  - name: Create database name..
+    mysql_db: name={{ database }} state=present
+
+  - name: download the wordpress package..
+    unarchive: src=https://wordpress.org/latest.zip dest=/var/www/ remote_src=yes
+ 
+  - name: renaming and the application
+    command: sudo mv /var/www/wordpress /var/www/html
+
+  - name: copy sample configuration file
+    copy:
+      src: /var/www/html/wordpress/wp-config-sample.php
+      dest: /var/www/html/wordpress/wp-config.php
+     
+  - name: configure application's database details..
+    sudo: yes
+    lineinfile:
+       dest=/var/www/html/wordpress/wp-config.php
+       regexp="{{ item.regexp }}"
+       line="{{ item.line }}"
     with_items:
-      - "{{ ansible_hostname }}"
-      - 127.0.0.1
-      - ::1
+      - {'regexp': "define\\('DB_USER', '(.)+'\\);", 'line': "define('DB_USER', '{{ dbuser }}')"}
+      - {'regexp': "define\\('DB_NAME', '(.)+'\\);", 'line': "define('DB_NAME', '{{ database }}');"}
+      - {'regexp': "define\\('DB_PASSWORD', '(.)+'\\);", 'line': "define('DB_NAME', '{{ dbpass }}');"}
+
+
