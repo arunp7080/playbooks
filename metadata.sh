@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -e
 
 function docker_name {
   for container_name in `docker ps -a | awk 'NR>1{print $NF}'`;
