@@ -53,9 +53,15 @@ function docker_pid {
 }
 
 
+echo ""
+echo "NAME        ID          IMAGE       IPADDRESS    STATUS     PROCESSID"
+echo "---------------------------------------------------------------------"
+
 pr -m -t <(docker_name) \
 <(docker_id) \
 <(docker_image) \
 <(docker_ip) \
 <(docker_status) \
 <(docker_pid)
+
+echo ""
